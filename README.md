@@ -309,6 +309,15 @@ Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
 KeyError: 'two'
 ```
+* удалить последний элемент в словаре и вернуть его. Под последним понимается последний добавленный элемент
+```python
+>>> numbers
+{'one': 1, 'two': 2, 'three': 3}
+>>> numbers.popitem()
+('three', 3)
+>>> numbers
+{'one': 1, 'two': 2}
+```
 * получить элемент по ключу и в случае отсутвия добавить его в словарь, вернув значение
 ```python
 >>> numbers 
@@ -327,3 +336,61 @@ KeyError: 'two'
 >>> numbers
 {'one': 1, 'two': 2, 'three': 3}
 ```
+### UserDict
+Отнаследовавшись от данного класса и поместви словарь в атрибут **data** можно добиться такого же поведения как и обычного словаря
+```python
+>>> from collections import UserDict
+>>> class MyDict(UserDict):
+...     def __init__(self, data):
+...             self.data = data
+...             self.data.update({'from_klass': True})
+... 
+>>> my_dict = MyDict({'one': 1})
+>>> my_dict
+{'one': 1, 'from_klass': True}
+```
+### OrderedDict
+Словарь, предоставляющий специальные методы, учитывающие порядок элементов в словаре
+* **move_to_end(key, last=True)** - переместить элемент в правый конец(при last=False в левый)
+* **popitem(last=True)** - удалить и вернуть элемент из правого конца
+```python
+>>> from collections import OrderedDict
+>>> ordered_dict = OrderedDict({'two': 2, 'one': 1})
+>>> ordered_dict
+OrderedDict([('two', 2), ('one', 1)])
+>>> ordered_dict.move_to_end('two')
+>>> ordered_dict
+OrderedDict([('one', 1), ('two', 2)])
+>>> ordered_dict2 = OrderedDict({'two': 2, 'one': 1})
+>>> ordered_dict == ordered_dict2
+False
+>>> ordered_dict.popitem()
+('two', 2)
+>>> ordered_dict
+OrderedDict([('one', 1)])
+```
+### defaultdict
+Специальный словарь, который в качестве аргумента для инициализатора принимает стаднартный для всех элементов тип, поддерживая тем самым присущие для этого типа операции прямо во время задания нового элемента по ключу
+```python
+>>> from collections import defaultdict
+>>> numbers = defaultdict(list)
+>>> numbers['1-10'].append(1)
+>>> numbers
+defaultdict(<class 'list'>, {'1-10': [1]})
+>>> numbers = defaultdict(int)
+>>> counter = defaultdict(int)
+>>> counter['John'] += 1
+>>> counter
+defaultdict(<class 'int'>, {'John': 1})
+```
+### dict comprehension
+```python
+>>> numbers = ['one', 'two', 'three']
+>>> numbers_mapping = {key: value for key, value in zip(numbers, range(1, 4))}
+>>> numbers_mapping
+{'one': 1, 'two': 2, 'three': 3}
+```
+### hashable
+Хэшируемыми объектами является те объекты, которые в течение своего жизненного цикла имеют неизменяемый хэш. Таке объекты имеют метод `__hash__`, который также используется для проверки эквивалентности значений объекта.
+Как правило, большинство неизменяемых типов хэшируемы, нехэшируемыми являются контейнерные типы(как изменяемы так и неизменяемые) - `list`, `dict`. В случае с `frozenset` и `tuple` хэшируемыми они становятся только если все их элементы так же хэшируемы. По-умолчанию все определенные пользовательские типы хэшируемы и получают хэш из `id()`.
+
