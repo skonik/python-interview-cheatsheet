@@ -75,7 +75,7 @@ code -- специальный модуль, предоставляющий во
 codeop -- альтернатива модулю code. Предоставляет некоторые утилиты для цикла read-eval-print.
 
 ### Code objects. 
-Если обратиться к объекту функции, то можно заметить специальный атрибут `__code__`, который хранит скомпилированный байткод функции.
+Если обратиться к объекту rфункции, то можно заметить специальный атрибут `__code__`, который хранит скомпилированный байткод функции.
 ```python
 >>> def sum(a, b):
 ...     my_const = 1
@@ -101,3 +101,229 @@ codeop -- альтернатива модулю code. Предоставляет
 (None, 1)
 ```
 
+
+## Type
+На уровне C питоновский объект представляет из себя структуру, в которой главными атрибутами является количество ссылок на объект и тип этого объекта. Тип определяет, какие операции поддерживаются данным объектом.
+```C
+typedef struct _object {
+    _PyObject_HEAD_EXTRA
+    Py_ssize_t ob_refcnt;
+    struct _typeobject *ob_type;
+} PyObject;
+```
+
+В питоне объекты могут быть изменяемыми(mutable) и неизменемыми(immutable).
+В случае с неизменяемыми объектами для изменения объекта нужно создать новый. Например, строка это неизмеяемый тип, а список -- изменяемый. 
+
+Когда мы пишем выражение вида `some_str = "something here"` в памяти создается объект str и имя some_str связывается с этим объектом. Количество ссылок у объекта в памяти увеличивается на 1. Когда он удаляется оператором del -- уменьшается на 1.
+
+Mutable
+```python
+>>> names = ['John']
+>>> id(names)
+140144987772488
+>>> names.append('Gabe')
+>>> id(names)
+140144987772488
+```
+Immutable
+```python
+>>> name = 'John'
+>>> id(name)
+140144987780240
+>>> name = 'Gabe'
+>>> id(name)
+140144987780296
+```
+ 
+Mutable
+
+| type | Mutalbe |
+|------|---------|
+|list  | True    | 
+|dict  | True    |
+|set   | True    |
+|bytearray | True    |
+
+Immutable
+
+| type | Mutalbe |
+|-------|--------|
+|frozenset | False |
+| int   | False |
+| str |False |
+| float| False |
+| tupe | False |
+| bool | False |
+|bytes | False    |
+
+
+
+### Виды эквивалентности объектов
+Функция id() возвращает идентичность объекта(иденфикатор) в виде числового значения, обычно указывающего на ячейку в памяти. Оператор **is** позволяет узнать эквивалентность идентификаторов. Оператор **==** тпозволяет узнать эквивалентность значений. 
+
+```pythonte
+>>> a = 'super string 12345aaaaa'
+>>> b = 'super string 12345aaaaa'
+>>> a is b
+False
+>>> a == b
+True
+```
+
+Примечание: в целях производительности CPython кэширует некоторые числа(от -5 до 256) и строки.
+```python
+>>> first = 256
+>>> second = 256
+>>> first is second
+True
+>>> first = 257
+>>> second = 257
+>>> first is second
+False
+```
+
+## Types and operations
+### Dictionaries
+Словарь представляет собой мутабельный контейнерный тип-отображение, хранящий отображение ключей в виде хэшируемых объектов на некоторые другие объекты(хэш таблица).
+
+Создать словарь можно следующим образом:
+```python
+>>> numbers = {'one': 1, 'two': 2}
+>>> numbers
+{'one': 1, 'two': 2}
+>>> numbers = dict(one=1, two=2)
+>>> numbers
+{'one': 1, 'two': 2}
+>>> numbers = dict.fromkeys(['one', 'two'], 'default')
+>>> numbers
+{'one': 'default', 'two': 'default'}
+>>> numbers = dict([('one', 1), ('two', 2)])
+>>> numbers
+{'one': 1, 'two': 2}
+```
+
+Основные операции:
+* получить количество элементов в словаре 
+```python
+>>> len(numbers)
+```
+* прочитать элемент по ключу. При отсутвии элемента возникает исключение `KeyError`. Сабкласс может заимпелементить метод `__missing__(key)`, который будет вызываться при отсутствии ключа *key*.
+```python
+>>> numbers
+{'one': 1, 'two': 2}
+>>> numbers['one']
+1
+>>> numbers['not_existing_key']
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+KeyError: 'not_existing_key'
+```
+
+* сопоставить ключ со значением
+```python
+>>> numbers
+{'one': 1, 'two': 2}
+>>> numbers['three'] = 3
+>>> numbers
+{'one': 1, 'two': 2, 'three': 3}
+```
+* удалить элемент по ключу
+```python
+>>> numbers
+{'one': 1, 'two': 2, 'three': 3}
+>>> del numbers['three']
+>>> numbers
+{'one': 1, 'two': 2}
+```
+* проверить, присутствует ли ключ в словаре
+```python
+>>> numbers
+{'one': 1, 'two': 2}
+>>> 'one' in numbers
+True
+>>> 1 in numbers
+False
+```
+* получить итератор по ключам
+```python
+>>> numbers
+{'one': 1, 'two': 2}
+>>> it = iter(numbers)
+>>> next(it)
+'one'
+```
+* очистить словарь 
+```python
+>>> numbers
+{'one': 1, 'two': 2}
+>>> numbers.clear()
+>>> numbers
+{}
+```
+* взять поверхностную копию объекта
+```python
+>>> numbers = {'one': 1, 'two': 2}
+>>> numbers_copy = numbers.copy()
+>>> numbers is numbers_copy
+False
+>>> numbers == numbers_copy
+True
+```
+* вернуть элемент по ключу, а вслучае отсутствия - элемент по умолчанию
+```python
+>>> numbers
+{'one': 1, 'two': 2}
+>>> numbers.get('three', 'empty')
+'empty'
+>>> numbers
+{'one': 1, 'two': 2}
+```
+* получить список пар ключ/значение(элементов) в виде view-obj
+```python
+>>> numbers
+{'one': 1, 'two': 2}
+>>> numbers.items()
+dict_items([('one', 1), ('two', 2)])
+```
+* получить список ключей в виде view-obj
+```python
+>>> numbers
+{'one': 1, 'two': 2}
+>>> numbers.keys()
+dict_keys(['one', 'two'])
+```
+* получить список значений в виде view-obj
+```python
+>>> numbers
+{'one': 1, 'two': 2}
+>>> numbers.values()
+dict_values([1, 2])
+```
+* удалить элемент по ключу и вернуть его
+```python
+>>> numbers.pop('two')
+2
+>>> numbers.pop('two')
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+KeyError: 'two'
+```
+* получить элемент по ключу и в случае отсутвия добавить его в словарь, вернув значение
+```python
+>>> numbers 
+{'one': 1}
+>>> two = numbers.setdefault('two', 2)
+>>> two
+2
+>>> numbers
+{'one': 1, 'two': 2}
+```
+* обновить словарь новыми данными(в виде словаря)
+```python
+>>> numbers
+{'one': 1, 'two': 2}
+>>> numbers.update({'three': 3})
+>>> numbers
+{'one': 1, 'two': 2, 'three': 3}
+```
