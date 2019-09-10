@@ -477,4 +477,78 @@ sad123
 sad23321
 ```
 
+### Decorators 
+Декоратор - паттерн проектирования, позволяющий изменить поведение существующего объекта.
+В питоне функции являются объектами первого класса, что означает возможность их передачи в качестве аргумента некоторой функции. Соответственно, их поведение можно изменять декораторами.
+```python
+In [3]: def makebold(fn):
+   ...:         def wrapped():
+   ...:             result = fn()
+   ...:             return '<b>' + result + '</b>'
+   ...:         return wrapped
 
+In [5]: @makebold
+   ...: def text():
+   ...:     return 'hello'
+   ...:
+
+In [6]: text()
+Out[6]: '<b>hello</b>'
+
+In [9]: text.__name__
+Out[9]: 'wrapped'
+```
+
+### Func default arguments
+Если в качестве дефолтного аргумента функции указан мутабельный тип, то при повторном вызове функции с аргументами по-умолчанию этот объект будет модифицироваться. 
+
+**Антипаттерн**
+```python
+In [44]: def append(lst=[]):
+    ...:     lst.append('test')
+    ...:     return lst
+    ...:
+
+In [45]: append.__defaults__
+Out[45]: ([],)
+
+In [46]: append()
+Out[46]: ['test']
+
+In [47]: append()
+Out[47]: ['test', 'test']
+
+In [48]: append.__defaults__
+Out[48]: (['test', 'test'],)
+```
+**Solution** - заменить дефолтное значение на None и инициализировать переменную пустым объектом прямо в функции, если объект `is None`.
+```python
+In [49]: def append(lst=None):
+    ...:     if lst is None:
+    ...:         lst = []
+    ...:     lst.append('test')
+    ...:     return lst
+    ...:
+
+In [50]: append.__defaults__
+Out[50]: (None,)
+
+In [51]: append()
+Out[51]: ['test']
+
+In [52]: append()
+Out[52]: ['test']
+```
+### Partial 
+**functools.partial** позволяет изменить объект-функцию так, чтобы она вызывалась с предопределенными аргументами.
+
+```python
+from functools import partial
+
+In [59]: def sum_of_two(a, b):
+    ...:     print(a + b)
+    
+In [60]: sum_of_three_and_other = partial(sum_of_two, b=3)
+In [61]: sum_of_three_and_other(2)
+5
+```
