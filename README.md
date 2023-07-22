@@ -556,7 +556,11 @@ In [61]: sum_of_three_and_other(2)
 ## Итератор
 Во-первых, итератор это изначально паттерн проектирования, который помогает проходится по элементам коллекции.
 В контексте python существует протокол итератора, который реализуется через имплементацию у объекта методов `__next__` и `__iter__`.
-При этом для итератора достаточно всего лишь метода `__next__`, когда как для итерируемого объекта `__iter__`.
+При этом для итератора нужны два метода - `__next__` и `__iter__`, когда как для итерируемого объекта только `__iter__`.
+
+Iterator наследуется от Iterable. 
+
+![img.png](img.png)
 
 Рассматрим пример итератора и итериуемого объекта, который генерирует uuid:
 ```python
@@ -589,6 +593,25 @@ for i in UUIDCollectionIterable():
 
 ```
 
+
+Чтобы проверить соответствие интерфейсу итератора или итерабельного объекта, можно использовать модуль `collections.abc`
+
+
+```python
+In [6]: from collections.abc import Iterable, Iterator
+
+In [7]: isinstance(UUIDCollectionIterable(), Iterable)
+Out[7]: True
+
+In [8]: isinstance(UUIDCollectionIterable(), Iterator)
+Out[8]: False
+
+In [11]: isinstance(UUIDCollectionIterator(), Iterator)
+Out[11]: True
+
+In [12]: isinstance(UUIDCollectionIterator(), Iterable)
+Out[12]: True
+```
 
 ### Threading in python
 #### GIL 
