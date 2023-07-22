@@ -560,7 +560,7 @@ In [61]: sum_of_three_and_other(2)
 
 Iterator наследуется от Iterable. 
 
-![img.png](img.png)
+<img src="./img/iterable.png" width="400px">
 
 Рассматрим пример итератора и итериуемого объекта, который генерирует uuid:
 ```python
